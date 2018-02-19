@@ -27,26 +27,30 @@
                 <div class="nine wide column">
                     <div class="ui form">
                         <div class="field">
-                            <textarea id="origin-textarea" style="height: 450px; resize:none" rows="5000" readonly=true></textarea>
+                            <textarea id="textarea" style="height: 530px; resize:none; font-size: 16px" rows="5000" readonly=true></textarea>
                         </div>
                     </div>
                 </div>
 
                 <div class="seven wide left aligned column">
-                    <div class="ui attached" style="height: 423px">
+                    <div class="ui attached" style="height: 504px">
                         <div style="height: 390px">
                             <div class="ui left inverted aligned header" style="font-size: 5em">
-                                <strong>这样对吗？</strong>
-                                <div class="sub header" style="font-size: 0.3em">请检查右侧文本是否正确。</div>
+                                <strong id="is-this-right">这样对吗？</strong>
+                                <div id="is-this-right-sub" class="sub header" style="font-size: 0.3em">请检查右侧文本是否正确。</div>
                             </div>
-                            <p>由于无法获取输入文件的编码信息，请您手动确认。</p>
-                            <p>若右侧文本出现乱码，请单击右上角的关闭键<i class="remove inverted icon"></i>，返回主界面后在下方的“选择文件编码”处进行文件编码的选择。</p>
-                            <p>若确认右侧文本无问题，请单击下方的“开始处理”键。</p>
-                        </div>
-
-                        <div id="processing" class="ui active progress">
-                            <div class="bar">
-                                <div class="progress"></div>
+                            <div id="instruction-1">
+                                <p>由于无法获取输入文件的编码信息，请您手动确认。</p>
+                                <p>若右侧文本出现乱码，请单击右上角的关闭键<i class="remove inverted icon"></i>，返回主界面后在下方的“选择文件编码”处进行文件编码的选择。</p>
+                                <p>若确认右侧文本无问题，请单击下方的“开始处理”键。</p>
+                            </div>
+                            <div id="instruction-2" style="position: absolute; bottom: 14%; color: rgba(255, 255, 255, 0.2); font-size: 0.1em; line-height: 3px">
+                                <p>
+                                    由Ray-Eldath开发。在<a target="_blank" href="https://github.com/Ray-Eldath/ComAmA">GitHub</a>上基于SATA（The Star And Thank Author License）协议开源。若有关于项目的意见或建议请到上述地址提出issue。引用代码请遵守开源协议。
+                                    <br/> 当前版本：v1.0.0-alpha
+                                    <br/>
+                                    <i class="warning sign icon"></i>当前版本<strong>完全</strong>不支持HTML标签、表格及引用。
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -77,10 +81,14 @@
                 <button id="to-read" class="positive compact ui button" style="margin-left: 10px">读 取</button>
             </div>
         </div>
+
+        <div class="ui center aligned inverted segment" style="background-color: rgba(0, 0, 0, 0)">
+            <p>&copy; 2018. Version: v1.0.0-alpha <br/> Developed by Ray Eldath. Open source at <a target="_blank" href="https://github.com/Ray-Eldath/ComAmA">GitHub</a> under SATA license.</p>
+        </div>
     </div>
 
     <script>
-        const debug = true
+        const debug = false
         $(document).ready(function() {
             var body = document.querySelector("body")
             var choser = document.getElementById("choser")
@@ -91,10 +99,12 @@
             var toRead = document.getElementById("to-read")
             var toClose = document.getElementById("to-close")
             var toHandle = document.getElementById("to-handle")
+            var isThisRight = document.getElementById("is-this-right")
+            var isThisRightSub = document.getElementById("is-this-right-sub")
+            var instructionFirst = document.getElementById("instruction-1")
             var dimmer = $("#dimmer")
-            var processing = $("#processing")
             var encodings = document.getElementById("encodings")
-            var originTextarea = document.getElementById("origin-textarea")
+            var textarea = document.getElementById("textarea")
             var encodingString = ""
             var fileContent = ""
 
@@ -116,11 +126,6 @@
                 closable: false
             })
 
-            processing.progress()
-            processing.progress({
-                total: 3
-            })
-
             for (let encoding of encodings.children) {
                 encoding.onclick = function() {
                     let temp = encoding.getAttribute("class")
@@ -131,6 +136,11 @@
                     encodingString = encoding.textContent
                 }
             }
+
+            let toHandleOriginClass = toHandle.className
+            let toHandleOriginTextContent = toHandle.textContent
+            let isThisRightOriginTextContent = isThisRight.textContent
+            let isThisRIghtSubOriginTextContent = isThisRightSub.textContent
 
             let first = true
             file.onchange = function() {
@@ -152,8 +162,15 @@
                         // e.total   文件总大小，字节
                         // e.type    上传状态‘load’
                         fileContent = reader.result
-                        originTextarea.textContent = fileContent
+                        textarea.textContent = fileContent
                     }
+                    isThisRight.textContent = isThisRightOriginTextContent
+                    isThisRightSub.textContent = isThisRIghtSubOriginTextContent
+                    toHandle.textContent = toHandleOriginTextContent
+                    toHandle.className = toHandleOriginClass
+                    $('#instruction-1').show() // 显示说明
+                    $("#to-handle").show() // 显示按钮
+                    toHandle.onclick = toHandleOnClick
                     dimmer.dimmer("show")
                 }
             }
@@ -166,24 +183,52 @@
                 dimmer.dimmer("hide")
             }
 
-            toHandle.onclick = function() {
+            toHandle.onclick = toHandleOnClick
+
+            function toHandleOnClick() {
+                // 处理前
+                $("#instruction-1").hide() // 隐藏说明
                 appendClass(toHandle, "loading disabled")
+                isThisRight.textContent = "处理中..."
+                isThisRightSub.textContent = "请等待处理完成。"
+
+                // 处理中
+                let result = handle(fileContent)
+
+                // 处理后
+                isThisRight.textContent = "完成啦！"
+                isThisRightSub.textContent = "复制左侧转换好的文本，then do anything you want!"
+                textarea.textContent = result
+                toHandle.className = toHandleOriginClass + " negative"
+                toHandle.textContent = "返回主界面"
+                toHandle.onclick = function() {
+                    toClose.click()
+                }
             }
         })
 
+        // IMPORTANT: 以下规则排布顺序敏感，请勿调整！
+        // 部分规则参照：https://gist.github.com/jbroadway/2836900
         const rules = new Map([
-            [/\*\*([\s\S]*)\*\*/, "[b]$1[/b]"], // 粗体
-            [/\*([\s\S]*)\*/, "[i]$1[/i]"], // 斜体
-            [/~~([\s\S]*)~~/, "[s]$1[/s]"], // 删除线
-            [/#([\s\S]*)/, "[b][h]$1[/h][/b]"], // 一级标题
-            [/##([\s\S]*)/, "[h]$1[/h]"], // 二级标题
-            [/###([\s\S]*)/, "[b]$1[/b]"], // 三级标题
-            [/(>([\s\S]*))+/, "[s]$1[/s]"], / [/~~([\s\S]*)~~/, "[s]$1[/s]"
-        ], // 
-        [/~~([\s\S]*)~~/, "[s]$1[/s]"], // 
-        [/~~([\s\S]*)~~/, "[s]$1[/s]"], // 
-        [/~~([\s\S]*)~~/, "[s]$1[/s]"] // 
+            [/#(.*)/g, "[b][h]$1[/h][/b]"], // 一级标题
+            [/##(.*)/g, "[h]$1[/h]"], // 二级标题
+            [/###(.*)/g, "[b]$1[/b]"], // 三级标题
+            [/(\*\*|__)(.*?)(\*\*|__)/g, "[b]$2[/b]"], // 粗体
+            [/(\*|_)(.*?)\1/g, "[i]$2[/i]"], // 斜体
+            [/\~\~(.*?)\~\~/g, "[s]$1[/s]"], // 删除线
+            [/`(.*?)`/g, "[code]$1[/code]"], // 行内代码
+            [/```(\w+)?\n([\s\S]*)```/g, "[code]\n$2[/code]"], // 代码块
+            [/!\[([^\[]+)\]\(([^\)]+)\)/g, "[img]$2[/img]"], // 图片
+            [/\[([^\[]+)\]\(([^\)]+)\)/g, "[url=$2]$1[/url]"] // 链接
         ])
+
+        function handle(content) {
+            let result = content
+            for (let [key, value] of rules.entries()) {
+                result = result.replace(key, value)
+            }
+            return result
+        }
 
         // TODO：引用（不论多行/单行）需特殊处理。
         // TODO：基本思路：使用String.match(XXX)获取匹配的文本（引用：`/\n(&gt;|\>)(.*)/g`），后.split('\n')，在剥去每行开头的`\n`，最后合并成一行。注意这里可以判断是否为单行，如果是，直接加标识符即可，不需执行split等操作。
@@ -199,8 +244,8 @@
         }
 
         function appendClass(element, value) {
-            let temp = element.getAttribute("class")
-            element.setAttribute("class", temp + " " + value)
+            let temp = element.className
+            element.className = temp + " " + value
         }
 
     </script>
