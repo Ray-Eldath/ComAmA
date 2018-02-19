@@ -1,0 +1,126 @@
+<head>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+
+    <script src="js/unsplash-source.min.js"></script>
+    <script src="https://cdn.bootcss.com/semantic-ui/2.2.14/semantic.min.js"></script>
+
+    <link href="https://cdn.bootcss.com/semantic-ui/2.2.14/semantic.min.css" rel="stylesheet">
+    <style>
+        .box-200 {
+            height: 200px;
+            width: 200px;
+        }
+
+    </style>
+</head>
+
+<body style="overflow: hidden">
+    <input id="file" type="file" accept=".md, .markdown, .txt" style="display: none" />
+    <div class="ui segment inverted container" style="background-color: rgba(0, 0, 0, 0)">
+
+        <div class="ui center huge inverted aligned header" style="font-size: 5em">
+            <strong>MarkdownInChaoliClub</strong>
+            <div class="sub header" style="font-size: 0.4em">将Markdown文本转换为超理论坛支持的格式</div>
+        </div>
+
+        <div class="ui raised very padded center aligned segment" style="background-color: rgba(0, 0, 0, 0.6)">
+            <div>
+                <button id="choser" class="ui circular inverted basic orange button box-200">
+                    <h1 id="choser-outer-text">待处理文件</h1>
+                    <div id="choser-inner-text">单击以选择文件<!-- TODO: 或将文件拖动到此处 --></div>
+                </button>
+            </div>
+
+            <div style="padding-top: 25px">
+                <span style="color: white">选择文件编码：</span>
+                <div id="encodings" class="ui buttons inverted yellow">
+                    <button class="ui compact button active">UTF-8</button>
+                    <button class="ui compact button">GBK</button>
+                </div>
+                <button id="to-read" class="positive compact ui button" style="margin-left: 10px">
+                    读 取
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function appendAttribute(element, name, value) {
+            let temp = element.getAttribute(name)
+            element.setAttribute(name, temp + "; " + value)
+        }
+
+        const debug = true
+        $(document).ready(function() {
+            var body = document.querySelector("body")
+
+            if (!debug) {
+                let backgroundUrl =
+                    new UnsplashPhoto()
+                    .fromCategory("nature")
+                    .size(document.body.clientWidth, document.body.clientHeight)
+                    .fetch()
+                fetch(backgroundUrl).then(function(response) {
+                    appendAttribute(body, "style", "background-image: url(\"" + response.url + "\")")
+                })
+            } else {
+                appendAttribute(body, "style", "background-color: rgba(0, 0, 0, 0.3)")
+            }
+
+            var choser = document.getElementById("choser")
+            var choserOuterText = document.getElementById("choser-outer-text")
+            var choserInnerText = document.getElementById("choser-inner-text")
+
+            var file = document.getElementById('file')
+            var toRead = document.getElementById('to-read')
+            var encodings = document.getElementById("encodings")
+            var encodingString = ""
+
+            for (let encoding of encodings.children) {
+                encoding.onclick = function() {
+                    let temp = encoding.getAttribute("class")
+                    for (let encodingN of encodings.children) {
+                        encodingN.setAttribute("class", temp)
+                    }
+                    encoding.setAttribute("class", temp + " active")
+                    encodingString = encoding.textContent
+                }
+            }
+
+            let first = true
+            file.onchange = function() {
+                let fileName = getFileName(file.value)
+                let reader = new FileReader()
+                if (file.files.length < 1)
+                    return;
+
+                choserOuterText.textContent = fileName
+                if (first) {
+                    choser.removeChild(choserInnerText)
+                    first = false
+                }
+
+                toRead.onclick = function() {
+                    reader.readAsText(file.files[0], encodingString);
+                    reader.onload = function(e) {
+                        // e.target  FileReader
+                        // e.total   文件总大小，字节
+                        // e.type    上传状态‘load’
+                        let result = reader.result
+                        console.info(result)
+                    }
+                }
+            }
+
+            choser.onclick = function() {
+                file.click()
+            }
+        })
+
+        function getFileName(value) {
+            let separator = value.includes("\\") ? "\\" : "/"
+            return value.slice(value.lastIndexOf(separator) + 1, value.length)
+        }
+
+    </script>
+</body>
