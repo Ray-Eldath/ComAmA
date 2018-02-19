@@ -1,4 +1,5 @@
 <head>
+    <title>ComAmA - Markdown文本转换器</title>
     <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
 
     <script src="js/unsplash-source.min.js"></script>
@@ -16,10 +17,46 @@
 
 <body style="overflow: hidden">
     <input id="file" type="file" accept=".md, .markdown, .txt" style="display: none" />
-    <div class="ui segment inverted container" style="background-color: rgba(0, 0, 0, 0)">
+    <div class="ui blurring segment inverted container" style="background-color: rgba(0, 0, 0, 0)">
+        <div id="dimmer" class="ui dimmer">
+            <button class="ui right floated icon button" style="background: transparent">
+                <i id="to-close" class="large remove inverted icon"></i>
+            </button>
 
-        <div class="ui center huge inverted aligned header" style="font-size: 5em">
-            <strong>MarkdownInChaoliClub</strong>
+            <div class="ui three column doubling grid" style="padding-left: 40px; padding-top: 40px">
+                <div class="nine wide column">
+                    <div class="ui form">
+                        <div class="field">
+                            <textarea id="origin-textarea" style="height: 450px; resize:none" rows="5000" readonly=true></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="seven wide left aligned column">
+                    <div class="ui attached" style="height: 423px">
+                        <div style="height: 390px">
+                            <div class="ui left inverted aligned header" style="font-size: 5em">
+                                <strong>这样对吗？</strong>
+                                <div class="sub header" style="font-size: 0.3em">请检查右侧文本是否正确。</div>
+                            </div>
+                            <p>由于无法获取输入文件的编码信息，请您手动确认。</p>
+                            <p>若右侧文本出现乱码，请单击右上角的关闭键<i class="remove inverted icon"></i>，返回主界面后在下方的“选择文件编码”处进行文件编码的选择。</p>
+                            <p>若确认右侧文本无问题，请单击下方的“开始处理”键。</p>
+                        </div>
+
+                        <div id="processing" class="ui active progress">
+                            <div class="bar">
+                                <div class="progress"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="to-handle" class="ui positive bottom attached button" tabindex="0">开始处理</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ui center inverted aligned header" style="font-size: 5em">
+            <strong>ComAmA</strong>
             <div class="sub header" style="font-size: 0.4em">将Markdown文本转换为超理论坛支持的格式</div>
         </div>
 
@@ -37,22 +74,29 @@
                     <button class="ui compact button active">UTF-8</button>
                     <button class="ui compact button">GBK</button>
                 </div>
-                <button id="to-read" class="positive compact ui button" style="margin-left: 10px">
-                    读 取
-                </button>
+                <button id="to-read" class="positive compact ui button" style="margin-left: 10px">读 取</button>
             </div>
         </div>
     </div>
 
     <script>
-        function appendAttribute(element, name, value) {
-            let temp = element.getAttribute(name)
-            element.setAttribute(name, temp + "; " + value)
-        }
-
         const debug = true
         $(document).ready(function() {
             var body = document.querySelector("body")
+            var choser = document.getElementById("choser")
+            var choserOuterText = document.getElementById("choser-outer-text")
+            var choserInnerText = document.getElementById("choser-inner-text")
+
+            var file = document.getElementById("file")
+            var toRead = document.getElementById("to-read")
+            var toClose = document.getElementById("to-close")
+            var toHandle = document.getElementById("to-handle")
+            var dimmer = $("#dimmer")
+            var processing = $("#processing")
+            var encodings = document.getElementById("encodings")
+            var originTextarea = document.getElementById("origin-textarea")
+            var encodingString = ""
+            var fileContent = ""
 
             if (!debug) {
                 let backgroundUrl =
@@ -61,20 +105,21 @@
                     .size(document.body.clientWidth, document.body.clientHeight)
                     .fetch()
                 fetch(backgroundUrl).then(function(response) {
-                    appendAttribute(body, "style", "background-image: url(\"" + response.url + "\")")
+                    appendStyle(body, "background-image: url(\"" + response.url + "\")")
                 })
             } else {
-                appendAttribute(body, "style", "background-color: rgba(0, 0, 0, 0.3)")
+                appendStyle(body, "background-color: rgba(0, 0, 0, 0.3)")
+                dimmer.dimmer("show")
             }
 
-            var choser = document.getElementById("choser")
-            var choserOuterText = document.getElementById("choser-outer-text")
-            var choserInnerText = document.getElementById("choser-inner-text")
+            dimmer.dimmer({
+                closable: false
+            })
 
-            var file = document.getElementById('file')
-            var toRead = document.getElementById('to-read')
-            var encodings = document.getElementById("encodings")
-            var encodingString = ""
+            processing.progress()
+            processing.progress({
+                total: 3
+            })
 
             for (let encoding of encodings.children) {
                 encoding.onclick = function() {
@@ -106,20 +151,56 @@
                         // e.target  FileReader
                         // e.total   文件总大小，字节
                         // e.type    上传状态‘load’
-                        let result = reader.result
-                        console.info(result)
+                        fileContent = reader.result
+                        originTextarea.textContent = fileContent
                     }
+                    dimmer.dimmer("show")
                 }
             }
 
             choser.onclick = function() {
                 file.click()
             }
+
+            toClose.onclick = function() {
+                dimmer.dimmer("hide")
+            }
+
+            toHandle.onclick = function() {
+                appendClass(toHandle, "loading disabled")
+            }
         })
+
+        const rules = new Map([
+            [/\*\*([\s\S]*)\*\*/, "[b]$1[/b]"], // 粗体
+            [/\*([\s\S]*)\*/, "[i]$1[/i]"], // 斜体
+            [/~~([\s\S]*)~~/, "[s]$1[/s]"], // 删除线
+            [/#([\s\S]*)/, "[b][h]$1[/h][/b]"], // 一级标题
+            [/##([\s\S]*)/, "[h]$1[/h]"], // 二级标题
+            [/###([\s\S]*)/, "[b]$1[/b]"], // 三级标题
+            [/(>([\s\S]*))+/, "[s]$1[/s]"], / [/~~([\s\S]*)~~/, "[s]$1[/s]"
+        ], // 
+        [/~~([\s\S]*)~~/, "[s]$1[/s]"], // 
+        [/~~([\s\S]*)~~/, "[s]$1[/s]"], // 
+        [/~~([\s\S]*)~~/, "[s]$1[/s]"] // 
+        ])
+
+        // TODO：引用（不论多行/单行）需特殊处理。
+        // TODO：基本思路：使用String.match(XXX)获取匹配的文本（引用：`/\n(&gt;|\>)(.*)/g`），后.split('\n')，在剥去每行开头的`\n`，最后合并成一行。注意这里可以判断是否为单行，如果是，直接加标识符即可，不需执行split等操作。
 
         function getFileName(value) {
             let separator = value.includes("\\") ? "\\" : "/"
             return value.slice(value.lastIndexOf(separator) + 1, value.length)
+        }
+
+        function appendStyle(element, value) {
+            let temp = element.getAttribute("style")
+            element.setAttribute("style", temp + "; " + value)
+        }
+
+        function appendClass(element, value) {
+            let temp = element.getAttribute("class")
+            element.setAttribute("class", temp + " " + value)
         }
 
     </script>
