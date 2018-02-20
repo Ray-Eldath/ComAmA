@@ -2,9 +2,9 @@
 
 在线将Markdown文本转换为超理论坛支持的格式。
 
-基于[Semantic UI](https://semantic-ui.com)、[jQuery](http://jquery.com)、[unsplash-source](https://github.com/unsplash/unsplash-source-js)和[Clipboard.js](https://clipboardjs.com)编写。稳定版本部署于[码云 - ComAmA#Page](http://ray-eldath.gitee.io/comama/)。
+项目名称取自[SCP-1590](http://scp-wiki-cn.wikidot.com/scp-1590)。项目基于[Semantic UI](https://semantic-ui.com)、[jQuery](http://jquery.com)、[unsplash-source](https://github.com/unsplash/unsplash-source-js)和[Clipboard.js](https://clipboardjs.com)编写。稳定版本部署于[码云 - ComAmA#Page](http://ray-eldath.gitee.io/comama/)。
 
-当前稳定版本：[v1.0.0-alpha](https://github.com/Ray-Eldath/ComAmA/releases/tag/v1.0.0-alpha)
+当前稳定版本：[v1.0.0-beta](https://github.com/Ray-Eldath/ComAmA/releases/tag/v1.0.0-beta)
 
 ## 使用
 
