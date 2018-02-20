@@ -1,9 +1,10 @@
 <head>
     <title>ComAmA - Markdown文本转换器</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
 
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
     <script src="js/unsplash-source.min.js"></script>
+    <script src="https://cdn.bootcss.com/clipboard.js/1.7.1/clipboard.min.js"></script>
     <script src="https://cdn.bootcss.com/semantic-ui/2.2.14/semantic.min.js"></script>
 
     <link href="https://cdn.bootcss.com/semantic-ui/2.2.14/semantic.min.css" rel="stylesheet">
@@ -13,11 +14,74 @@
             width: 200px;
         }
 
+        #footer {
+            background-color: rgba(0, 0, 0, 0)
+        }
+
+        #footer a {
+            color: white;
+            text-decoration: underline
+        }
+
+        #textarea {
+            height: 87.5%;
+            resize: none;
+            font-size: 16px
+        }
+
+        #instruction-2 {
+            position: absolute;
+            bottom: 14%;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 0.1em;
+            line-height: 3px;
+            display: none
+        }
+
+        #instruction-2 a {
+            color: rgba(255, 255, 255, 0.2);
+            text-decoration: underline
+        }
+
+        @media all and (min-width: 995px) {
+            #instruction-2 {
+                display: block
+            }
+        }
+
+        body {
+            overflow: hidden
+        }
+
     </style>
 </head>
 
-<body style="overflow: hidden">
+<body>
+    <!-- 隐藏的选择框 -->
     <input id="file" type="file" accept=".md, .markdown, .txt" style="display: none" />
+
+    <!-- 隐藏的模态框 -->
+    <div class="ui small modal">
+        <div class="header">注意</div>
+        <div class="image content" style="padding-left: 40px">
+            <div class="image">
+                <i class="warning sign icon"></i>
+            </div>
+            <div class="description">
+                <p>当前版本（v0.0.1-beta）的ComAmA暂不支持引用（单行或引用块）、表格和HTML标签的转换，将以原文输出。</p>
+                <p>我们会尽快支持它们。在此之前还请您手动核对输出文本。</p>
+                <p>给您带来的不便，我们非常抱歉。</p>
+            </div>
+        </div>
+        <div class="actions">
+            <div class="ui positive right labeled icon button">
+                知道啦~
+                <i class="checkmark icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主体 -->
     <div class="ui blurring segment inverted container" style="background-color: rgba(0, 0, 0, 0)">
         <div id="dimmer" class="ui dimmer">
             <button class="ui right floated icon button" style="background: transparent">
@@ -28,31 +92,27 @@
                 <div class="nine wide column">
                     <div class="ui form">
                         <div class="field">
-                            <textarea id="textarea" style="height: 530px; resize:none; font-size: 16px" rows="5000" readonly=true></textarea>
+                            <textarea id="textarea" rows="5000" readonly=true>ALPHA</textarea>
                         </div>
                     </div>
                 </div>
 
                 <div class="seven wide left aligned column">
-                    <div class="ui attached" style="height: 504px">
-                        <div style="height: 390px">
-                            <div class="ui left inverted aligned header" style="font-size: 5em">
-                                <strong id="is-this-right">这样对吗？</strong>
-                                <div id="is-this-right-sub" class="sub header" style="font-size: 0.3em">请检查右侧文本是否正确。</div>
-                            </div>
-                            <div id="instruction-1">
-                                <p>由于无法获取输入文件的编码信息，请您手动确认。</p>
-                                <p>若右侧文本出现乱码，请单击右上角的关闭键<i class="remove inverted icon"></i>，返回主界面后在下方的“选择文件编码”处进行文件编码的选择。</p>
-                                <p>若确认右侧文本无问题，请单击下方的“开始处理”键。</p>
-                            </div>
-                            <div id="instruction-2" style="position: absolute; bottom: 14%; color: rgba(255, 255, 255, 0.2); font-size: 0.1em; line-height: 3px">
-                                <p>
-                                    由Ray-Eldath开发。在<a target="_blank" href="https://github.com/Ray-Eldath/ComAmA">GitHub</a>上基于SATA（The Star And Thank Author License）协议开源。若有关于项目的意见或建议请到上述地址提出issue。引用代码请遵守开源协议。
-                                    <br/> 当前版本：v1.0.0-alpha
-                                    <br/>
-                                    <i class="warning sign icon"></i>当前版本<strong>完全</strong>不支持HTML标签、表格及引用。
-                                </p>
-                            </div>
+                    <div class="ui attached" style="height: 83%">
+                        <div class="ui left inverted aligned header" style="font-size: 5em">
+                            <strong id="is-this-right">这样对吗？</strong>
+                            <div id="is-this-right-sub" class="sub header" style="font-size: 0.3em">请检查右侧文本是否正确。</div>
+                        </div>
+                        <div id="instruction-1">
+                            <p>由于无法获取输入文件的编码信息，请您手动确认。</p>
+                            <p>若右侧文本出现乱码，请单击右上角的关闭键<i class="remove inverted icon"></i>，返回主界面后在下方的“选择文件编码”处进行文件编码的选择。</p>
+                            <p>若确认右侧文本无问题，请单击下方的“开始处理”键。</p>
+                        </div>
+                        <div id="instruction-2">
+                            <p>
+                                由Ray-Eldath开发。在<a target="_blank" href="https://github.com/Ray-Eldath/ComAmA">GitHub</a>上基于SATA（The Star And Thank Author License）协议开源。若有关于项目的意见、建议或疑问欢迎<a target="_blank" href="https://github.com/Ray-Eldath/ComAmA/issues/new">提出issue</a>。
+                                <br/> 当前版本：v1.0.0-beta
+                            </p>
                         </div>
                     </div>
                     <div id="to-handle" class="ui positive bottom attached button" tabindex="0">开始处理</div>
@@ -83,8 +143,8 @@
             </div>
         </div>
 
-        <div class="ui center aligned inverted segment" style="background-color: rgba(0, 0, 0, 0)">
-            <p>&copy; 2018. Version: v1.0.0-alpha <br/> Developed by Ray Eldath. Open source at <a target="_blank" href="https://github.com/Ray-Eldath/ComAmA">GitHub</a> under SATA license.</p>
+        <div id="footer" class="ui center aligned inverted segment">
+            <p>&copy; 2018. Version: v1.0.0-beta <br/> Developed by Ray Eldath. Open source at <a target="_blank" href="https://github.com/Ray-Eldath/ComAmA">GitHub</a> under SATA license.</p>
         </div>
     </div>
 
@@ -109,6 +169,11 @@
             var encodingString = ""
             var fileContent = ""
 
+            $('.ui.modal').modal('setting', 'closable', false)
+            dimmer.dimmer({
+                closable: false
+            })
+
             if (!debug) {
                 let backgroundUrl =
                     new UnsplashPhoto()
@@ -121,11 +186,9 @@
             } else {
                 appendStyle(body, "background-color: rgba(0, 0, 0, 0.3)")
                 dimmer.dimmer("show")
+                $('.ui.modal').modal('show')
             }
 
-            dimmer.dimmer({
-                closable: false
-            })
 
             for (let encoding of encodings.children) {
                 encoding.onclick = function() {
@@ -169,6 +232,7 @@
                     isThisRightSub.textContent = isThisRIghtSubOriginTextContent
                     toHandle.textContent = toHandleOriginTextContent
                     toHandle.className = toHandleOriginClass
+                    toHandle.removeAttribute("data-clipboard-target")
                     $('#instruction-1').show() // 显示说明
                     $("#to-handle").show() // 显示按钮
                     toHandle.onclick = toHandleOnClick
@@ -200,20 +264,24 @@
                 isThisRight.textContent = "完成啦！"
                 isThisRightSub.textContent = "复制左侧转换好的文本，then do anything you want!"
                 textarea.textContent = result
+                appendClass(toHandle, "btn")
+                toHandle.setAttribute("data-clipboard-target", "#textarea")
                 toHandle.className = toHandleOriginClass + " negative"
-                toHandle.textContent = "返回主界面"
-                toHandle.onclick = function() {
+                toHandle.textContent = "复制输出到剪贴板并返回主界面"
+                toHandle.onclick = function(e) {
+                    new Clipboard('#to-handle')
                     toClose.click()
                 }
+                $('.ui.modal').modal('show')
             }
         })
 
         // IMPORTANT: 以下规则排布顺序敏感，请勿调整！
         // 部分规则参照：https://gist.github.com/jbroadway/2836900
         const rules = new Map([
-            [/#(.*)/g, "[b][h]$1[/h][/b]"], // 一级标题
-            [/##(.*)/g, "[h]$1[/h]"], // 二级标题
-            [/###(.*)/g, "[b]$1[/b]"], // 三级标题
+            [/###( ?)(.*)/g, "[b]$2[/b]"], // 三级标题
+            [/##( ?)(.*)/g, "[h]$2[/h]"], // 二级标题
+            [/#( ?)(.*)/g, "[b][h]$2[/h][/b]"], // 一级标题
             [/(\*\*|__)(.*?)(\*\*|__)/g, "[b]$2[/b]"], // 粗体
             [/(\*|_)(.*?)\1/g, "[i]$2[/i]"], // 斜体
             [/\~\~(.*?)\~\~/g, "[s]$1[/s]"], // 删除线
