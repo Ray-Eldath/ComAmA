@@ -92,7 +92,7 @@
                 <div class="nine wide column">
                     <div class="ui form">
                         <div class="field">
-                            <textarea id="textarea" rows="5000" readonly=true>ALPHA</textarea>
+                            <textarea id="textarea" rows="5000" readonly=true>empty</textarea>
                         </div>
                     </div>
                 </div>
@@ -101,12 +101,12 @@
                     <div class="ui attached" style="height: 83%">
                         <div class="ui left inverted aligned header" style="font-size: 5em">
                             <strong id="is-this-right">这样对吗？</strong>
-                            <div id="is-this-right-sub" class="sub header" style="font-size: 0.3em">请检查右侧文本是否正确。</div>
+                            <div id="is-this-right-sub" class="sub header" style="font-size: 0.3em">请检查左侧文本是否正确。</div>
                         </div>
                         <div id="instruction-1">
                             <p>由于无法获取输入文件的编码信息，请您手动确认。</p>
-                            <p>若右侧文本出现乱码，请单击右上角的关闭键<i class="remove inverted icon"></i>，返回主界面后在下方的“选择文件编码”处进行文件编码的选择。</p>
-                            <p>若确认右侧文本无问题，请单击下方的“开始处理”键。</p>
+                            <p>若左侧文本出现乱码，请单击右上角的关闭键<i class="remove inverted icon"></i>，返回主界面后在下方的“选择文件编码”处进行文件编码的选择。</p>
+                            <p>若确认左侧文本无问题，请单击下方的“开始处理”键。</p>
                         </div>
                         <div id="instruction-2">
                             <p>
@@ -296,11 +296,29 @@
             for (let [key, value] of rules.entries()) {
                 result = result.replace(key, value)
             }
+
+            function handleQuotes(input) {
+                let resultM = ""
+                for (let thisLine of input.split("\n")) {
+                    resultM += removePrefix(thisLine, ">") + "\n"
+                }
+
+                return "\n[quote]" + resultM + "[/quote]\n"
+            }
+
+            // 处理引用
+            result = result.replace(/(\n\>.*){2,}/g, handleQuotes)
+                .trim().replace(/\> ?(.*)/g, "[quote]$1[/quote]")
+
             return result
         }
 
-        // TODO：引用（不论多行/单行）需特殊处理。
-        // TODO：基本思路：使用String.match(XXX)获取匹配的文本（引用：`/\n(&gt;|\>)(.*)/g`），后.split('\n')，在剥去每行开头的`\n`，最后合并成一行。注意这里可以判断是否为单行，如果是，直接加标识符即可，不需执行split等操作。
+        function removePrefix(content, prefix) {
+            let trimed = content.trim()
+            return content.startsWith(prefix) ?
+                trimed.substring(prefix.length, content.length) :
+                trimed
+        }
 
         function getFileName(value) {
             let separator = value.includes("\\") ? "\\" : "/"

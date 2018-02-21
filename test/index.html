@@ -1,0 +1,42 @@
+<head>
+</head>
+
+<body>
+    <textarea id="textarea" style="width: 500px; height: 500px" rows="1000"></textarea>
+    <button id="button">Click to test</button>
+
+    <script>
+        var textarea = document.getElementById("textarea")
+        var output = document.getElementById("id")
+        var button = document.getElementById("button")
+
+        textarea.focus()
+        button.onclick = function() {
+            alert(toTest(textarea.value))
+            textarea.focus()
+        }
+
+        function toTest(inputOuter) {
+            // PASS!
+            function handleQuotes(input) {
+                let resultM = ""
+                for (let thisLine of input.split("\n")) {
+                    resultM += removePrefix(thisLine, ">") + "\n"
+                }
+
+                return "\n[quote]" + resultM + "[/quote]\n"
+            }
+
+            return inputOuter.replace(/(\n\>.*){2,}/g, handleQuotes)
+                .trim().replace(/\> ?(.*)/g, "[quote]$1[/quote]")
+        }
+
+        function removePrefix(content, prefix) {
+            let trimed = content.trim()
+            return content.startsWith(prefix) ?
+                trimed.substring(prefix.length, content.length) :
+                trimed
+        }
+
+    </script>
+</body>
